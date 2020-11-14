@@ -15,6 +15,7 @@ use stm32f7xx_hal::prelude::*;
 use stm32f7xx_hal::rcc::{HSEClock, HSEClockMode};
 use usb_device::prelude::*;
 
+
 #[entry]
 fn main() -> ! {
     let dp = pac::Peripherals::take().unwrap();
