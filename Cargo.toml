@@ -71,6 +71,8 @@ stm32f779 = ["stm32f7/stm32f7x9", "device-selected", "ltdc", "fmc"]
 
 usb_fs = ["synopsys-usb-otg", "synopsys-usb-otg/fs"]
 
+usb_hs = ["synopsys-usb-otg", "synopsys-usb-otg/hs"]
+
 [profile.dev]
 incremental = false
 codegen-units = 1
@@ -123,3 +125,7 @@ required-features = ["stm32f767", "rt"]
 [[example]]
 name = "usb_serial"
 required-features = ["stm32f723", "rt", "usb_fs"]
+
+[[example]]
+name = "usb_serial_hs"
+required-features = ["stm32f723", "rt", "usb_hs"]

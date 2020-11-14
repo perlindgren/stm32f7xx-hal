@@ -1,5 +1,8 @@
 [target.thumbv7em-none-eabihf]
-runner = "arm-none-eabi-gdb -q -tui -x openocd.gdb"
+# runner = "arm-none-eabi-gdb -q -tui -x openocd.gdb"
+
+runner = "probe-run --chip STM32F723IEKx"
+
 rustflags = [
   "-C", "link-arg=-Tlink.x",
 ]
