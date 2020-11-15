@@ -81,51 +81,31 @@ fn main() -> ! {
         .device_class(USB_CLASS_NONE)
         .build();
 
-    let mut t = 0;
-
     loop {
+        rprintln!("poll");
         if !usb_dev.poll(&mut [&mut midi]) {
             continue;
         }
-        if usb_dev.state() == UsbDeviceState::Configured {
+        rprintln!("after poll");
+
+        while usb_dev.state() == UsbDeviceState::Configured {
             rprintln!("configured");
-            t += 1;
-            //if t == 10000 {
+
             rprintln!("send note on");
-            t = 0;
+
             let _ = midi.send_message(UsbMidiEventPacket::from_midi(
                 CableNumber::Cable0,
                 NoteOn(Channel::Channel1, Note::C2, U7::from_clamped(64)),
             ));
-        //}
-        } else {
-            rprintln!("un configured");
+            rprintln!("poll");
+            if !usb_dev.poll(&mut [&mut midi]) {
+                continue;
+            }
+            rprintln!("after poll");
+            cortex_m::asm::delay(200_000_000); // about 1 s
         }
+        rprintln!("un configured");
     }
 }
 
 pub const USB_CLASS_NONE: u8 = 0x00;
-
-// let mut buf = [0u8; 64];
-
-// match serial.read(&mut buf) {
-//     Ok(count) if count > 0 => {
-//         // Echo back in upper case
-//         for c in buf[0..count].iter_mut() {
-//             if 0x61 <= *c && *c <= 0x7a {
-//                 *c &= !0x20;
-//             }
-//         }
-
-//         let mut write_offset = 0;
-//         while write_offset < count {
-//             match serial.write(&buf[write_offset..count]) {
-//                 Ok(len) if len > 0 => {
-//                     write_offset += len;
-//                 }
-//                 _ => {}
-//             }
-//         }
-//     }
-//     _ => {}
-// }
