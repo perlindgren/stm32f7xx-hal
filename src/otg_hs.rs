@@ -53,12 +53,12 @@ unsafe impl Sync for USB {}
 unsafe impl UsbPeripheral for USB {
     const REGISTERS: *const () = pac::OTG_HS_GLOBAL::ptr() as *const ();
 
-    // const HIGH_SPEED: bool = true;
+    // const HIGH_SPEED: bool = false;
     // const FIFO_DEPTH_WORDS: usize = 320;
     // const ENDPOINT_COUNT: usize = 6;
-    const HIGH_SPEED: bool = false;
-    const FIFO_DEPTH_WORDS: usize = 320;
-    const ENDPOINT_COUNT: usize = 6;
+    const HIGH_SPEED: bool = true;
+    const FIFO_DEPTH_WORDS: usize = 1024;
+    const ENDPOINT_COUNT: usize = 9;
 
     fn enable() {
         let rcc = unsafe { &*pac::RCC::ptr() };

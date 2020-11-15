@@ -1,9 +1,17 @@
 //! CDC-ACM serial port example using polling in a busy loop.
-//! Target board: any STM32F7 with a OTG FS peripheral and a 25MHz HSE generator
+//! Target board: any STM32F7 with a OTG FS/HS peripheral and a 25MHz HSE generator
+//!
+//! For FS operation:
+//! > cargo run --example usb_serial --features  "stm32f723, rt, usb_fs" --release
+//!
+//! For HS operation:
+//! > cargo run --example usb_serial --features  "stm32f723, rt, usb_hs" --release
+
 #![no_std]
 #![no_main]
 
-use panic_semihosting as _;
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
 
 use cortex_m_rt::entry;
 #[cfg(feature = "usb_fs")]
@@ -15,9 +23,11 @@ use stm32f7xx_hal::prelude::*;
 use stm32f7xx_hal::rcc::{HSEClock, HSEClockMode};
 use usb_device::prelude::*;
 
-
 #[entry]
 fn main() -> ! {
+    rtt_init_print!();
+    rprintln!("usbd-serial in ");
+
     let dp = pac::Peripherals::take().unwrap();
 
     let rcc = dp.RCC.constrain();
@@ -68,7 +78,10 @@ fn main() -> ! {
         .product("Serial port")
         .serial_number("TEST")
         .device_class(usbd_serial::USB_CLASS_CDC)
+        .max_packet_size_0(64) // Size required for HS, and ok for FS
         .build();
+
+    rprintln!("setup complete");
 
     loop {
         if !usb_dev.poll(&mut [&mut serial]) {
@@ -79,6 +92,7 @@ fn main() -> ! {
 
         match serial.read(&mut buf) {
             Ok(count) if count > 0 => {
+                rprintln!("received bytes: {:?}", count);
                 // Echo back in upper case
                 for c in buf[0..count].iter_mut() {
                     if 0x61 <= *c && *c <= 0x7a {
@@ -91,11 +105,17 @@ fn main() -> ! {
                     match serial.write(&buf[write_offset..count]) {
                         Ok(len) if len > 0 => {
                             write_offset += len;
+                            rprintln!("sent bytes: {:?}", len);
+                        }
+                        Err(err) => {
+                            rprintln!("error: {:?}", err);
                         }
                         _ => {}
                     }
                 }
+                rprintln!("sent bytes: {:?}", count);
             }
+
             _ => {}
         }
     }

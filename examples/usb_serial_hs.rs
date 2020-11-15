@@ -50,6 +50,7 @@ fn main() -> ! {
         .product("Serial port")
         .serial_number("TEST")
         .device_class(usbd_serial::USB_CLASS_CDC)
+        .max_packet_size_0(64)
         .build();
 
     loop {
