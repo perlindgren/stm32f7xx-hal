@@ -13,9 +13,10 @@ use crate::rcc::Clocks;
 use crate::time::Hertz;
 
 pub use synopsys_usb_otg::UsbBus;
-use synopsys_usb_otg::UsbPeripheral;
+use synopsys_usb_otg::{PhyType, UsbPeripheral};
 
 pub struct USB {
+    // pub usb_phy: pac::USBPHYC, // later
     pub usb_global: pac::OTG_HS_GLOBAL,
     pub usb_device: pac::OTG_HS_DEVICE,
     pub usb_pwrclk: pac::OTG_HS_PWRCLK,
@@ -29,6 +30,7 @@ impl USB {
     ///
     /// Call `UsbBus::new` to construct and initialize the USB peripheral driver.
     pub fn new(
+        // usb_phy: pac::USBPHYC, // later
         usb_global: pac::OTG_HS_GLOBAL,
         usb_device: pac::OTG_HS_DEVICE,
         usb_pwrclk: pac::OTG_HS_PWRCLK,
@@ -51,6 +53,9 @@ unsafe impl Sync for USB {}
 unsafe impl UsbPeripheral for USB {
     const REGISTERS: *const () = pac::OTG_HS_GLOBAL::ptr() as *const ();
 
+    // const HIGH_SPEED: bool = true;
+    // const FIFO_DEPTH_WORDS: usize = 320;
+    // const ENDPOINT_COUNT: usize = 6;
     const HIGH_SPEED: bool = false;
     const FIFO_DEPTH_WORDS: usize = 320;
     const ENDPOINT_COUNT: usize = 6;
@@ -65,11 +70,48 @@ unsafe impl UsbPeripheral for USB {
             // Reset USB peripheral
             rcc.ahb1rstr.modify(|_, w| w.otghsrst().set_bit());
             rcc.ahb1rstr.modify(|_, w| w.otghsrst().clear_bit());
+
+            // Enable and reset HS Phy
+            rcc.ahb1enr.modify(|_, w| w.otghsulpien().enabled());
+            rcc.apb2enr.modify(|_, w| w.usbphycen().enabled());
+            rcc.apb2rstr.modify(|_, w| w.usbphycrst().reset());
+            rcc.apb2rstr.modify(|_, w| w.usbphycrst().clear_bit());
         });
     }
 
     fn ahb_frequency_hz(&self) -> u32 {
         self.hclk.0
+    }
+
+    #[inline(always)]
+    fn phy_type(&self) -> PhyType {
+        PhyType::InternalHighSpeed
+    }
+
+    // Setup LDO and PLL
+    fn setup_internal_hs_phy(&self) {
+        let phy = unsafe { &*pac::USBPHYC::ptr() };
+
+        // Turn on LDO
+        // For some reason setting the bit enables the LDO
+        phy.ldo.modify(|_, w| w.ldo_disable().set_bit());
+
+        // Busy wait until ldo_status becomes true
+        // Notice, this may hang
+        while phy.ldo.read().ldo_status().bit_is_clear() {}
+
+        // Setup PLL
+        // This disables the the pll1 during tuning
+        phy.pll1.write(|w| unsafe {
+            w.pll1sel().bits(0b101 /* A value for 25MHz HSE */)
+        });
+
+        phy.tune.modify(|r, w| unsafe { w.bits(r.bits() | 0xF13) });
+
+        phy.pll1.modify(|_, w| w.pll1en().set_bit());
+
+        // 2ms Delay required to get internal phy clock stable
+        cortex_m::asm::delay(432000);
     }
 }
 

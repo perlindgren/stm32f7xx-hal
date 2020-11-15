@@ -1,5 +1,8 @@
-//! CDC-ACM serial port example using polling in a busy loop.
+//! MIDI out from target.
 //! Target board: any STM32F7 with a OTG FS peripheral and a 25MHz HSE generator
+//! Tested on STM32F723 Discovery to work with both LINUX and OSX.
+//! The application simply outputs midi on notes at an interval of approx 1s.
+
 #![no_std]
 #![no_main]
 
