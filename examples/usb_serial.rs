@@ -6,6 +6,8 @@
 //!
 //! For HS operation:
 //! > cargo run --example usb_serial --features  "stm32f723, rt, usb_hs" --release
+//!
+//! Notice, https://github.com/mvirkkunen/usbd-serial/pull/14
 
 #![no_std]
 #![no_main]
@@ -110,10 +112,11 @@ fn main() -> ! {
                         Err(err) => {
                             rprintln!("error: {:?}", err);
                         }
-                        _ => {}
+                        _ => {
+                            rprintln!("usb serial error");
+                        }
                     }
                 }
-                rprintln!("sent bytes: {:?}", count);
             }
 
             _ => {}

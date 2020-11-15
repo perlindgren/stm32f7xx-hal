@@ -52,6 +52,10 @@ usbd-serial = "0.1.1"
 rtt-target = { version = "0.2.2", features = ["cortex-m"] }
 panic-rtt-target = { version = "0.1.1", features = ["cortex-m"] }
 
+# Temporary fix to allow HS operation
+[patch.crates-io]
+usbd-serial = { git = "https://github.com/Disasm/usbd-serial.git", rev = "827116e5fab66a51ab7d68774419b0f187b24b90" }
+
 [features]
 device-selected = []
 ltdc = []
@@ -136,3 +140,7 @@ required-features = ["stm32f723", "rt", "usb_hs"]
 [[example]]
 name = "usb_midi"
 required-features = ["stm32f723", "rt", "usb_fs"]
+
+[[example]]
+name = "usb_midi_hs"
+required-features = ["stm32f723", "rt", "usb_hs"]

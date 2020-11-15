@@ -1,9 +1,9 @@
 //! MIDI out from target.
 //! Target board: any STM32F7 with a OTG FS peripheral and a 25MHz HSE generator
 //! Tested on STM32F723 Discovery to work with both LINUX and OSX.
-//! The application simply outputs midi note on/off messages at an interval of approx 1s.
+//! The application simply outputs midi on notes at an interval of approx 1s.
 //!
-//! > cargo run --example usb_midi --features  "stm32f723, rt, usb_fs" --release
+//! > cargo run --example usb_midi_hs --features  "stm32f723, rt, usb_hs" --release
 //!
 //! Under linux, in another terminal
 //!
@@ -19,9 +19,7 @@
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
 
-use cortex_m_rt::entry;
-
-use stm32f7xx_hal::otg_fs::{UsbBus, USB};
+use stm32f7xx_hal::otg_hs::{UsbBus, USB};
 use stm32f7xx_hal::pac;
 use stm32f7xx_hal::prelude::*;
 use stm32f7xx_hal::rcc::{HSEClock, HSEClockMode};
@@ -42,7 +40,7 @@ use usbd_midi::{
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
-    rprintln!("usb midi FS example");
+    rprintln!("usb midi HS example");
 
     let dp = pac::Peripherals::take().unwrap();
 
@@ -56,15 +54,15 @@ fn main() -> ! {
         .sysclk(216.mhz())
         .freeze();
 
-    let gpioa = dp.GPIOA.split();
+    let gpiob = dp.GPIOB.split();
 
     let usb = USB::new(
-        dp.OTG_FS_GLOBAL,
-        dp.OTG_FS_DEVICE,
-        dp.OTG_FS_PWRCLK,
+        dp.OTG_HS_GLOBAL,
+        dp.OTG_HS_DEVICE,
+        dp.OTG_HS_PWRCLK,
         (
-            gpioa.pa11.into_alternate_af10(),
-            gpioa.pa12.into_alternate_af10(),
+            gpiob.pb14.into_alternate_af12(),
+            gpiob.pb15.into_alternate_af12(),
         ),
         clocks,
     );
@@ -79,6 +77,7 @@ fn main() -> ! {
         .product("midi device")
         .serial_number("TEST")
         .device_class(USB_CLASS_NONE)
+        .max_packet_size_0(64)
         .build();
 
     loop {
