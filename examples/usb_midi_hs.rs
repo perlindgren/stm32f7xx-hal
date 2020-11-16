@@ -1,9 +1,9 @@
 //! MIDI out from target.
 //! Target board: any STM32F7 with a OTG FS peripheral and a 25MHz HSE generator
 //! Tested on STM32F723 Discovery to work with both LINUX and OSX.
-//! The application simply outputs midi on notes at an interval of approx 1s.
+//! The application simply outputs midi note on/off messages at an interval of approx 1s.
 //!
-//! > cargo run --example usb_midi_hs --features  "stm32f723, rt, usb_hs" --release
+//! > cargo run --example usb_midi --features  "stm32f723, rt, usb_fs" --release
 //!
 //! Under linux, in another terminal
 //!
@@ -18,6 +18,8 @@
 
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
+
+use cortex_m_rt::entry;
 
 use stm32f7xx_hal::otg_hs::{UsbBus, USB};
 use stm32f7xx_hal::pac;
