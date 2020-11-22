@@ -3,7 +3,7 @@
 //! Tested on STM32F723 Discovery to work with both LINUX and OSX.
 //! The application simply outputs midi note on/off messages at an interval of approx 1s.
 //!
-//! > cargo run --example usb_midi --features  "stm32f723, rt, usb_fs" --release
+//! > cargo run --example usb_midi_hs --features  "stm32f723, rt, usb_hs" --release
 //!
 //! Under linux, in another terminal
 //!
