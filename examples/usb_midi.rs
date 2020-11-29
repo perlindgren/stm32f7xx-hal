@@ -79,18 +79,20 @@ fn main() -> ! {
         .product("midi device")
         .serial_number("TEST")
         .device_class(USB_CLASS_NONE)
+        .max_packet_size_0(64)
         .build();
 
+    let mut buff = [0u8; 1024];
     loop {
         rprintln!("poll");
-        if !usb_dev.poll(&mut [&mut midi]) {
-            continue;
-        }
-        rprintln!("after poll");
+        usb_dev.poll(&mut [&mut midi]);
 
         let mut state = false;
         while usb_dev.state() == UsbDeviceState::Configured {
             rprintln!("configured");
+
+            let message_raw = midi.get_message_raw(&mut buff);
+            rprintln!("read = {:?}", message_raw);
 
             if state {
                 rprintln!("send note off");
@@ -107,12 +109,14 @@ fn main() -> ! {
                 ));
                 state = true;
             }
-            rprintln!("poll");
-            if !usb_dev.poll(&mut [&mut midi]) {
-                continue;
+
+            rprintln!("wait");
+            for _i in 0..1_000_000 {
+                cortex_m::asm::nop();
+                //                cortex_m::asm::delay(200_000_000); // about 1 s
             }
-            rprintln!("after poll");
-            cortex_m::asm::delay(200_000_000); // about 1 s
+            rprintln!("wake");
+            usb_dev.poll(&mut [&mut midi]);
         }
         rprintln!("un configured");
     }

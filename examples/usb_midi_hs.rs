@@ -69,7 +69,7 @@ fn main() -> ! {
         clocks,
     );
 
-    static mut EP_MEMORY: [u32; 1024] = [0; 1024];
+    static mut EP_MEMORY: [u32; 2048] = [0; 2048];
     let usb_bus = UsbBus::new(usb, unsafe { &mut EP_MEMORY });
 
     let mut midi = MidiClass::new(&usb_bus);
@@ -82,6 +82,7 @@ fn main() -> ! {
         .max_packet_size_0(64)
         .build();
 
+    let mut buff = [0u8; 16];
     loop {
         rprintln!("poll");
         if !usb_dev.poll(&mut [&mut midi]) {
@@ -89,31 +90,43 @@ fn main() -> ! {
         }
         rprintln!("after poll");
 
+        loop {
+            continue;
+        }
+
         let mut state = false;
         while usb_dev.state() == UsbDeviceState::Configured {
-            rprintln!("configured");
+            // rprintln!("configured");
 
-            if state {
-                rprintln!("send note off");
-                let _ = midi.send_message(UsbMidiEventPacket::from_midi(
-                    CableNumber::Cable0,
-                    NoteOff(Channel::Channel1, Note::C2, U7::from_clamped(64)),
-                ));
-                state = false;
-            } else {
-                rprintln!("send note on");
-                let _ = midi.send_message(UsbMidiEventPacket::from_midi(
-                    CableNumber::Cable0,
-                    NoteOn(Channel::Channel1, Note::C2, U7::from_clamped(64)),
-                ));
-                state = true;
+            let message_raw = midi.get_message_raw(&mut buff);
+            match message_raw {
+                Ok(msg) => {
+                    rprintln!("read = {:?}", message_raw);
+                }
+                _ => {}
             }
-            rprintln!("poll");
+
+            // if state {
+            //     rprintln!("send note off");
+            //     let _ = midi.send_message(UsbMidiEventPacket::from_midi(
+            //         CableNumber::Cable0,
+            //         NoteOff(Channel::Channel1, Note::C2, U7::from_clamped(64)),
+            //     ));
+            //     state = false;
+            // } else {
+            //     rprintln!("send note on");
+            //     let _ = midi.send_message(UsbMidiEventPacket::from_midi(
+            //         CableNumber::Cable0,
+            //         NoteOn(Channel::Channel1, Note::C2, U7::from_clamped(64)),
+            //     ));
+            //     state = true;
+            // }
+            // rprintln!("poll");
             if !usb_dev.poll(&mut [&mut midi]) {
                 continue;
             }
-            rprintln!("after poll");
-            cortex_m::asm::delay(200_000_000); // about 1 s
+            // rprintln!("after poll");
+            // cortex_m::asm::delay(1000_000_000); // about 1 s
         }
         rprintln!("un configured");
     }
