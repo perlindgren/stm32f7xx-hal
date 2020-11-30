@@ -23,7 +23,7 @@ rtcc = "0.2"
 stm32f7 = "0.12.1"
 micromath = "1.1.0"
 synopsys-usb-otg = { version = "0.2.3", features = ["cortex-m"], optional = true }
-stm32-fmc = { version = "0.2.0", features = ["sdram"], optional = true }
+stm32-fmc = { version = "0.2.1", features = ["sdram"], optional = true }
 usbd-midi = "0.2.0"
 
 [dependencies.bare-metal]
